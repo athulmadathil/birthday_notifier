@@ -1,0 +1,83 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  username      String         @unique
+  email         String         @unique
+  password      String
+  name          String
+  dateOfBirth   DateTime
+  role          Role          @default(STUDENT)
+  department    String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  notifications Notification[]
+  activities    Activity[]
+}
+
+model Notification {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  type          NotificationType
+  template      Template? @relation(fields: [templateId], references: [id])
+  templateId    String?
+  customMessage String?
+  status        Status    @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Template {
+  id           String         @id @default(uuid())
+  name         String
+  type         NotificationType
+  content      String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  notifications Notification[]
+}
+
+model Activity {
+  id          String    @id @default(uuid())
+  type        String
+  description String
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  timestamp   DateTime  @default(now())
+}
+
+model EventLog {
+  id        String    @id @default(uuid())
+  type      NotificationType
+  recipient String
+  status    Status
+  details   String
+  timestamp DateTime  @default(now())
+}
+
+enum Role {
+  STUDENT
+  STAFF
+  FACULTY
+  ADMIN
+}
+
+enum NotificationType {
+  EMAIL
+  CARD
+}
+
+enum Status {
+  PENDING
+  SUCCESS
+  FAILED
+} 

@@ -3,15 +3,15 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')
-  
+
   // Paths that require authentication
   const protectedPaths = [
-    '/dashboard',
+    // '/dashboard',
     '/profile',
     '/api/birthdays',
   ]
 
-  const isProtectedPath = protectedPaths.some(path => 
+  const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
 
@@ -28,4 +28,4 @@ export const config = {
     '/profile/:path*',
     '/api/birthdays/:path*',
   ],
-} 
+}

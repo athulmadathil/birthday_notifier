@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthContext } from '@/providers/AuthProvider';
+import { api } from '@/lib/api-client';
 
 interface User {
   id: string;
@@ -13,7 +14,7 @@ interface User {
 }
 
 export default function UsersPage() {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuthContext();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -27,20 +28,19 @@ export default function UsersPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (user) {
       fetchUsers();
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users');
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
+      setLoading(true);
+      const response = await api.getUsers();
+      setUsers(response.users || []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setError('Failed to fetch users');
     } finally {
       setLoading(false);
     }
@@ -51,18 +51,7 @@ export default function UsersPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add user');
-      }
-
+      await api.createUser(formData);
       setShowAddForm(false);
       setFormData({
         name: '',
@@ -77,7 +66,7 @@ export default function UsersPage() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
@@ -224,25 +213,33 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {user.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(user.dateOfBirth).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.role}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.department}
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No users found
                 </td>
               </tr>
-            ))}
+            ) : (
+              users.map((user) => (
+                <tr key={user.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {user.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(user.dateOfBirth).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {user.role}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {user.email}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {user.department}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

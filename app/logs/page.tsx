@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
 
 interface EventLog {
   id: string;
@@ -13,7 +12,6 @@ interface EventLog {
 }
 
 export default function LogsPage() {
-  const { isAuthenticated } = useAuth();
   const [logs, setLogs] = useState<EventLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'email' | 'notification' | 'card'>('all');
@@ -21,12 +19,6 @@ export default function LogsPage() {
     start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
   });
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchLogs();
-    }
-  }, [isAuthenticated, filter, dateRange]);
 
   const fetchLogs = async () => {
     try {
@@ -72,10 +64,6 @@ export default function LogsPage() {
         return null;
     }
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   if (loading) {
     return (
